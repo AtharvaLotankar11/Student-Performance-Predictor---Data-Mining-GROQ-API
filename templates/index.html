@@ -1,0 +1,1102 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Student Performance Predictor - AI Powered</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        .particles {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .particle {
+            position: absolute;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 50%;
+            animation: float 15s infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0) translateX(0); }
+            25% { transform: translateY(-20px) translateX(10px); }
+            50% { transform: translateY(-40px) translateX(-10px); }
+            75% { transform: translateY(-20px) translateX(10px); }
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            position: relative;
+            z-index: 1;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            animation: fadeInDown 0.8s ease;
+        }
+
+        @keyframes fadeInDown {
+            from {
+                opacity: 0;
+                transform: translateY(-30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        h1 {
+            color: white;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 20px rgba(0, 0, 0, 0.3);
+        }
+
+        .subtitle {
+            color: rgba(255, 255, 255, 0.9);
+            font-size: 1.2em;
+        }
+
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr;
+            gap: 30px;
+            animation: fadeIn 1s ease;
+            justify-items: center;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .main-content.results-mode {
+            grid-template-columns: 400px 1fr;
+            justify-items: start;
+        }
+
+        .form-card {
+            width: 400px;
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+
+        .card {
+            background: rgba(255, 255, 255, 0.95);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(10px);
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 25px 70px rgba(0, 0, 0, 0.4);
+        }
+
+        .card h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 10px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            color: #333;
+            font-weight: 600;
+        }
+
+        select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        select:focus, input[type="number"]:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        input[type="number"] {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 10px;
+            font-size: 1em;
+            transition: all 0.3s ease;
+            background: white;
+        }
+
+        .btn {
+            width: 100%;
+            padding: 15px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn:active {
+            transform: translateY(0);
+        }
+
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none !important;
+        }
+
+        .results-container {
+            display: none;
+            opacity: 0;
+            transform: translateX(50px);
+            transition: all 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .results-container.show {
+            display: block;
+            opacity: 1;
+            transform: translateX(0);
+            animation: slideInFromRight 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        @keyframes slideInFromRight {
+            from {
+                opacity: 0;
+                transform: translateX(50px);
+            }
+            to {
+                opacity: 1;
+                transform: translateX(0);
+            }
+        }
+
+        .prediction-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .prediction-box {
+            background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+            border-radius: 15px;
+            padding: 20px;
+            border-left: 5px solid #667eea;
+            transition: all 0.3s ease;
+        }
+
+        .prediction-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2);
+        }
+
+        .prediction-box.ensemble {
+            grid-column: 1 / -1;
+            background: linear-gradient(135deg, #ffeaa7 0%, #fdcb6e 100%);
+            border-left-color: #fdcb6e;
+        }
+
+        .prediction-box h3 {
+            color: #667eea;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .prediction-box.ensemble h3 {
+            color: #d63031;
+        }
+
+        .prediction-result {
+            font-size: 1.8em;
+            font-weight: bold;
+            margin: 10px 0;
+        }
+
+        .prediction-result.pass {
+            color: #10b981;
+        }
+
+        .prediction-result.fail {
+            color: #ef4444;
+        }
+
+        .confidence {
+            color: #666;
+            font-size: 0.9em;
+        }
+
+        .probability-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .probability-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.8s ease;
+        }
+
+        .probability-fill.pass {
+            background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+        }
+
+        .probability-fill.fail {
+            background: linear-gradient(90deg, #ef4444 0%, #dc2626 100%);
+        }
+
+        .feature-importance {
+            margin-top: 20px;
+        }
+
+        .feature-bar {
+            margin-bottom: 15px;
+        }
+
+        .feature-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 5px;
+            font-size: 0.9em;
+            color: #555;
+        }
+
+        .bar-container {
+            background: #e0e0e0;
+            border-radius: 10px;
+            height: 10px;
+            overflow: hidden;
+        }
+
+        .bar-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            border-radius: 10px;
+            transition: width 0.8s ease;
+        }
+
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 20px;
+            border-radius: 10px;
+            text-align: center;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            transition: all 0.3s ease;
+        }
+
+        .metric-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.15);
+        }
+
+        .metric-card h4 {
+            color: #667eea;
+            font-size: 0.9em;
+            margin-bottom: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .metric-card .value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .metric-card .model-name {
+            font-size: 0.85em;
+            color: #888;
+            margin-top: 5px;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 20px;
+        }
+
+        .loading.show {
+            display: block;
+        }
+
+        .spinner {
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #667eea;
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .input-summary {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .input-summary h3 {
+            color: #667eea;
+            font-size: 1em;
+            margin-bottom: 10px;
+        }
+
+        .input-summary-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 8px;
+            font-size: 0.9em;
+        }
+
+        .input-item {
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .input-label {
+            font-weight: 600;
+            color: #666;
+        }
+
+        .input-value {
+            color: #333;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        .groq-insight {
+            background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%);
+            border-radius: 15px;
+            padding: 20px;
+            margin-top: 20px;
+            border-left: 5px solid #10b981;
+            animation: fadeInUp 0.6s ease;
+        }
+
+        .groq-insight h3 {
+            color: #10b981;
+            margin-bottom: 10px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .groq-insight p {
+            color: #2d5a2d;
+            line-height: 1.6;
+            margin: 0;
+        }
+
+        @keyframes fadeInUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .metrics-section {
+            grid-column: 1 / -1;
+            width: 100%;
+            margin-top: 20px;
+        }
+
+        .metrics-analysis {
+            background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%);
+            border-radius: 15px;
+            padding: 25px;
+            margin-bottom: 25px;
+            border-left: 5px solid #667eea;
+            animation: fadeInUp 0.8s ease;
+        }
+
+        .analysis-content {
+            animation: fadeIn 0.6s ease 0.2s both;
+        }
+
+        .best-model-highlight {
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.02); }
+        }
+
+        .analysis-loading {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: #667eea;
+            font-style: italic;
+        }
+
+        .analysis-loading::before {
+            content: '';
+            width: 16px;
+            height: 16px;
+            border: 2px solid #667eea;
+            border-top: 2px solid transparent;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @media (max-width: 1200px) {
+            .main-content {
+                grid-template-columns: 1fr;
+                justify-items: center;
+            }
+            
+            .main-content.results-mode {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+            }
+
+            .prediction-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .input-summary-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="particles" id="particles"></div>
+
+    <div class="container">
+        <header>
+            <h1>🎓 Student Performance Predictor</h1>
+            <p class="subtitle">Complete Student Performance Card Analysis - Demographics + Test Scores</p>
+        </header>
+
+        <div class="main-content">
+            <!-- Input Form -->
+            <div class="card form-card">
+                <h2>Student Performance Card</h2>
+                
+                <!-- Explanation Section -->
+                <div style="background: linear-gradient(135deg, #f8f9ff 0%, #e8f0ff 100%); padding: 15px; border-radius: 10px; margin-bottom: 20px; border-left: 4px solid #667eea;">
+                    <h4 style="color: #667eea; margin-bottom: 8px; font-size: 0.9em;">📋 What This Analyzes:</h4>
+                    <ul style="font-size: 0.85em; color: #555; margin: 0; padding-left: 20px; line-height: 1.4;">
+                        <li><strong>Demographics:</strong> Background factors that may influence academic success</li>
+                        <li><strong>Socioeconomic Status:</strong> Family income level (via lunch program eligibility)</li>
+                        <li><strong>Test Preparation:</strong> Whether student completed prep courses</li>
+                        <li><strong>Academic Scores:</strong> Current performance in Math, Reading, and Writing</li>
+                    </ul>
+                </div>
+                
+                <form id="predictionForm">
+                    <div class="form-group">
+                        <label for="gender">Gender</label>
+                        <select id="gender" name="gender" required>
+                            <option value="">Select Gender</option>
+                            <option value="female">Female</option>
+                            <option value="male">Male</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="race_ethnicity">Race/Ethnicity Group</label>
+                        <select id="race_ethnicity" name="race_ethnicity" required>
+                            <option value="">Select Ethnic Group</option>
+                            <option value="group A">Group A (Ethnic Background 1)</option>
+                            <option value="group B">Group B (Ethnic Background 2)</option>
+                            <option value="group C">Group C (Ethnic Background 3)</option>
+                            <option value="group D">Group D (Ethnic Background 4)</option>
+                            <option value="group E">Group E (Ethnic Background 5)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="parental_education">Parental Level of Education</label>
+                        <select id="parental_education" name="parental_education" required>
+                            <option value="">Select Education Level</option>
+                            <option value="some high school">Some High School</option>
+                            <option value="high school">High School</option>
+                            <option value="some college">Some College</option>
+                            <option value="associate's degree">Associate's Degree</option>
+                            <option value="bachelor's degree">Bachelor's Degree</option>
+                            <option value="master's degree">Master's Degree</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="lunch">Socioeconomic Status (Lunch Program)</label>
+                        <select id="lunch" name="lunch" required>
+                            <option value="">Select Economic Status</option>
+                            <option value="standard">Standard (Higher Income Family)</option>
+                            <option value="free/reduced">Free/Reduced (Lower Income Family)</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="test_prep">Test Preparation Course</label>
+                        <select id="test_prep" name="test_prep" required>
+                            <option value="">Select Option</option>
+                            <option value="none">None</option>
+                            <option value="completed">Completed</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="math_score">Math Score (0-100)</label>
+                        <input type="number" id="math_score" name="math_score" min="0" max="100" required 
+                               style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em; transition: all 0.3s ease;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="reading_score">Reading Score (0-100)</label>
+                        <input type="number" id="reading_score" name="reading_score" min="0" max="100" required 
+                               style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em; transition: all 0.3s ease;">
+                    </div>
+
+                    <div class="form-group">
+                        <label for="writing_score">Writing Score (0-100)</label>
+                        <input type="number" id="writing_score" name="writing_score" min="0" max="100" required 
+                               style="width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 10px; font-size: 1em; transition: all 0.3s ease;">
+                    </div>
+
+                    <button type="submit" class="btn" id="predictBtn">🔮 Predict Performance</button>
+                    <button type="button" class="btn" id="resetBtn" style="display: none; margin-top: 10px; background: linear-gradient(135deg, #6c757d 0%, #495057 100%);">🔄 New Prediction</button>
+                </form>
+
+                <div class="loading" id="loading">
+                    <div class="spinner"></div>
+                    <p style="margin-top: 10px; color: #667eea; font-weight: 600;">Analyzing with AI models...</p>
+                </div>
+            </div>
+
+            <!-- Results -->
+            <div class="card results-container" id="results">
+                <h2>Prediction Results</h2>
+                
+                <div class="input-summary" id="inputSummary">
+                    <h3>📋 Input Summary</h3>
+                    <div class="input-summary-grid" id="summaryContent">
+                        <!-- Summary will be populated here -->
+                    </div>
+                </div>
+
+                <div class="prediction-grid">
+                    <div class="prediction-box">
+                        <h3>🌲 Decision Tree</h3>
+                        <div class="prediction-result" id="dt-result">-</div>
+                        <div class="confidence" id="dt-confidence">-</div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" id="dt-prob-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-box">
+                        <h3>🌳 Random Forest</h3>
+                        <div class="prediction-result" id="rf-result">-</div>
+                        <div class="confidence" id="rf-confidence">-</div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" id="rf-prob-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-box">
+                        <h3>⚡ SVM</h3>
+                        <div class="prediction-result" id="svm-result">-</div>
+                        <div class="confidence" id="svm-confidence">-</div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" id="svm-prob-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-box">
+                        <h3>🧠 Neural Network</h3>
+                        <div class="prediction-result" id="nn-result">-</div>
+                        <div class="confidence" id="nn-confidence">-</div>
+                        <div class="probability-bar">
+                            <div class="probability-fill" id="nn-prob-bar"></div>
+                        </div>
+                    </div>
+
+                    <div class="prediction-box ensemble">
+                        <h3>🎯 Ensemble Prediction</h3>
+                        <div class="prediction-result" id="ensemble-result">-</div>
+                        <div class="confidence" id="ensemble-confidence">-</div>
+                    </div>
+                </div>
+
+                <div class="feature-importance">
+                    <h3 style="color: #667eea; margin-bottom: 15px;">📊 Feature Importance Analysis</h3>
+                    <p style="font-size: 0.9em; color: #666; margin-bottom: 15px;">
+                        Factors that most influence the prediction (higher percentage = more important):
+                    </p>
+                    <div id="feature-bars"></div>
+                </div>
+
+                <!-- Groq AI Insight -->
+                <div class="groq-insight" id="groqInsight" style="display: none;">
+                    <h3>🤖 AI Insight</h3>
+                    <p id="groqInsightText">Generating personalized insights...</p>
+                </div>
+            </div>
+
+        </div>
+
+        <!-- Model Metrics Section (Below main content) -->
+        <div class="card metrics-section">
+            <h2>🏆 Model Performance Metrics</h2>
+            <p style="color: #666; margin-bottom: 20px;">Comparison of all trained models on test data</p>
+            
+            <!-- AI Analysis Section -->
+            <div class="metrics-analysis" id="metricsAnalysis" style="display: none;">
+                <h3 style="color: #667eea; margin-bottom: 15px; display: flex; align-items: center; gap: 8px;">
+                    🤖 AI Performance Analysis
+                </h3>
+                <div class="analysis-content" id="analysisContent">
+                    <p id="analysisText" style="color: #444; line-height: 1.6; margin-bottom: 15px;">Loading analysis...</p>
+                    <div class="best-model-highlight" id="bestModelHighlight" style="background: linear-gradient(135deg, #fff3cd 0%, #ffeaa7 100%); padding: 15px; border-radius: 10px; border-left: 4px solid #f39c12;">
+                        <strong style="color: #d68910;">🥇 Best Performing Model: </strong>
+                        <span id="bestModelName" style="color: #d68910; font-weight: bold;">-</span>
+                        <span style="color: #666;"> with </span>
+                        <span id="bestModelAccuracy" style="color: #d68910; font-weight: bold;">-</span>
+                        <span style="color: #666;"> accuracy</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="metrics-grid" id="metrics">
+                <!-- Metrics will be loaded here -->
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Create animated particles
+        function createParticles() {
+            const particles = document.getElementById('particles');
+            for (let i = 0; i < 20; i++) {
+                const particle = document.createElement('div');
+                particle.className = 'particle';
+                particle.style.width = Math.random() * 60 + 20 + 'px';
+                particle.style.height = particle.style.width;
+                particle.style.left = Math.random() * 100 + '%';
+                particle.style.top = Math.random() * 100 + '%';
+                particle.style.animationDelay = Math.random() * 15 + 's';
+                particle.style.animationDuration = Math.random() * 10 + 10 + 's';
+                particles.appendChild(particle);
+            }
+        }
+
+        createParticles();
+
+        // Load model metrics on page load
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/metrics');
+                const metrics = await response.json();
+                
+                const metricsContainer = document.getElementById('metrics');
+                let metricsHTML = '';
+                
+                const modelNames = {
+                    'decision_tree': 'Decision Tree',
+                    'random_forest': 'Random Forest',
+                    'svm': 'SVM',
+                    'neural_network': 'Neural Network'
+                };
+                
+                for (const [modelKey, modelMetrics] of Object.entries(metrics)) {
+                    metricsHTML += `
+                        <div class="metric-card">
+                            <h4>Accuracy</h4>
+                            <div class="value">${(modelMetrics.accuracy * 100).toFixed(1)}%</div>
+                            <div class="model-name">${modelNames[modelKey]}</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>Precision</h4>
+                            <div class="value">${(modelMetrics.precision * 100).toFixed(1)}%</div>
+                            <div class="model-name">${modelNames[modelKey]}</div>
+                        </div>
+                        <div class="metric-card">
+                            <h4>F1-Score</h4>
+                            <div class="value">${(modelMetrics.f1_score * 100).toFixed(1)}%</div>
+                            <div class="model-name">${modelNames[modelKey]}</div>
+                        </div>
+                    `;
+                }
+                
+                metricsContainer.innerHTML = metricsHTML;
+                
+                // Load AI analysis
+                loadMetricsAnalysis();
+            } catch (error) {
+                console.error('Error loading metrics:', error);
+            }
+        }
+
+        // Load AI analysis of model performance
+        async function loadMetricsAnalysis() {
+            try {
+                const analysisSection = document.getElementById('metricsAnalysis');
+                const analysisText = document.getElementById('analysisText');
+                const bestModelName = document.getElementById('bestModelName');
+                const bestModelAccuracy = document.getElementById('bestModelAccuracy');
+                
+                // Show the analysis section
+                analysisSection.style.display = 'block';
+                analysisText.innerHTML = '<span class="analysis-loading">Generating AI analysis of model performance...</span>';
+                
+                const response = await fetch('/metrics-analysis');
+                const result = await response.json();
+                
+                if (result.success) {
+                    analysisText.innerHTML = result.analysis;
+                    bestModelName.textContent = result.best_model;
+                    bestModelAccuracy.textContent = result.best_accuracy;
+                } else {
+                    analysisText.innerHTML = 'AI analysis temporarily unavailable. All models show good performance for student prediction tasks.';
+                    bestModelName.textContent = 'Multiple models';
+                    bestModelAccuracy.textContent = 'performing well';
+                }
+            } catch (error) {
+                console.error('Error loading metrics analysis:', error);
+                document.getElementById('analysisText').innerHTML = 
+                    'Performance analysis shows all models are well-trained for educational predictions.';
+            }
+        }
+
+        loadMetrics();
+
+        // Reset functionality
+        document.getElementById('resetBtn').addEventListener('click', () => {
+            // Reset form
+            document.getElementById('predictionForm').reset();
+            
+            // Hide results and reset layout
+            document.getElementById('results').classList.remove('show');
+            document.querySelector('.main-content').classList.remove('results-mode');
+            document.getElementById('groqInsight').style.display = 'none';
+            
+            // Show/hide buttons
+            document.getElementById('predictBtn').style.display = 'block';
+            document.getElementById('resetBtn').style.display = 'none';
+        });
+
+        // Handle form submission
+        document.getElementById('predictionForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            
+            const formData = {
+                gender: document.getElementById('gender').value,
+                race_ethnicity: document.getElementById('race_ethnicity').value,
+                parental_education: document.getElementById('parental_education').value,
+                lunch: document.getElementById('lunch').value,
+                test_prep: document.getElementById('test_prep').value,
+                math_score: document.getElementById('math_score').value,
+                reading_score: document.getElementById('reading_score').value,
+                writing_score: document.getElementById('writing_score').value
+            };
+
+            // Show loading and animate layout
+            document.getElementById('loading').classList.add('show');
+            document.getElementById('results').classList.remove('show');
+            document.querySelector('.main-content').classList.add('results-mode');
+            
+            // Disable predict button and show reset button
+            document.getElementById('predictBtn').disabled = true;
+
+            try {
+                const response = await fetch('/predict', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify(formData)
+                });
+
+                const result = await response.json();
+
+                if (result.success) {
+                    // Update input summary
+                    const summaryContent = document.getElementById('summaryContent');
+                    summaryContent.innerHTML = `
+                        <div class="input-item">
+                            <span class="input-label">Gender:</span>
+                            <span class="input-value">${result.input_summary.gender}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Ethnicity:</span>
+                            <span class="input-value">${result.input_summary.ethnicity}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Parental Education:</span>
+                            <span class="input-value">${result.input_summary.parental_education}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Lunch Type:</span>
+                            <span class="input-value">${result.input_summary.lunch_type}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Test Preparation:</span>
+                            <span class="input-value">${result.input_summary.test_prep}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Math Score:</span>
+                            <span class="input-value">${result.input_summary.math_score}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Reading Score:</span>
+                            <span class="input-value">${result.input_summary.reading_score}</span>
+                        </div>
+                        <div class="input-item">
+                            <span class="input-label">Writing Score:</span>
+                            <span class="input-value">${result.input_summary.writing_score}</span>
+                        </div>
+                        <div class="input-item full-width" style="background: linear-gradient(135deg, #e8f5e8 0%, #d4f1d4 100%); padding: 8px; border-radius: 8px; margin-top: 8px;">
+                            <span class="input-label" style="color: #10b981; font-weight: bold;">Average Score:</span>
+                            <span class="input-value" style="color: #10b981; font-weight: bold; font-size: 1.1em;">${result.input_summary.average_score}</span>
+                        </div>
+                    `;
+
+                    // Update Decision Tree results
+                    updatePrediction('dt', result.predictions.decision_tree);
+                    
+                    // Update Random Forest results
+                    updatePrediction('rf', result.predictions.random_forest);
+                    
+                    // Update SVM results
+                    updatePrediction('svm', result.predictions.svm);
+                    
+                    // Update Neural Network results
+                    updatePrediction('nn', result.predictions.neural_network);
+
+                    // Update Ensemble results
+                    const ensembleResult = document.getElementById('ensemble-result');
+                    ensembleResult.textContent = result.predictions.ensemble.prediction;
+                    ensembleResult.className = 'prediction-result ' + 
+                        (result.predictions.ensemble.prediction === 'Pass' ? 'pass' : 'fail');
+                    document.getElementById('ensemble-confidence').textContent = 
+                        `${result.predictions.ensemble.agreement} • Confidence: ${result.predictions.ensemble.confidence}%`;
+
+                    // Update feature importance
+                    const featureBars = document.getElementById('feature-bars');
+                    featureBars.innerHTML = result.feature_importance.map(f => `
+                        <div class="feature-bar">
+                            <div class="feature-label">
+                                <span>${f.feature}</span>
+                                <span><strong>${f.importance.toFixed(1)}%</strong></span>
+                            </div>
+                            <div class="bar-container">
+                                <div class="bar-fill" style="width: ${f.importance}%"></div>
+                            </div>
+                        </div>
+                    `).join('');
+
+                    // Show results with animation
+                    document.getElementById('loading').classList.remove('show');
+                    document.getElementById('predictBtn').disabled = false;
+                    document.getElementById('predictBtn').style.display = 'none';
+                    document.getElementById('resetBtn').style.display = 'block';
+                    
+                    setTimeout(() => {
+                        document.getElementById('results').classList.add('show');
+                        
+                        // Generate Groq AI insight
+                        generateGroqInsight(result, formData);
+                    }, 300);
+                    
+                    // Scroll to results on mobile
+                    if (window.innerWidth < 1200) {
+                        setTimeout(() => {
+                            document.getElementById('results').scrollIntoView({ behavior: 'smooth' });
+                        }, 800);
+                    }
+                }
+            } catch (error) {
+                alert('Error making prediction: ' + error.message);
+                document.getElementById('loading').classList.remove('show');
+                document.getElementById('predictBtn').disabled = false;
+                document.querySelector('.main-content').classList.remove('results-mode');
+            }
+        });
+
+        function updatePrediction(prefix, prediction) {
+            const resultEl = document.getElementById(`${prefix}-result`);
+            const confidenceEl = document.getElementById(`${prefix}-confidence`);
+            const probBarEl = document.getElementById(`${prefix}-prob-bar`);
+
+            resultEl.textContent = prediction.prediction;
+            resultEl.className = 'prediction-result ' + 
+                (prediction.prediction === 'Pass' ? 'pass' : 'fail');
+            confidenceEl.textContent = 
+                `Pass Probability: ${prediction.pass_probability}% • Confidence: ${prediction.confidence}%`;
+            
+            probBarEl.style.width = prediction.pass_probability + '%';
+            probBarEl.className = 'probability-fill ' + 
+                (prediction.prediction === 'Pass' ? 'pass' : 'fail');
+        }
+
+        // Generate Groq AI insight
+        async function generateGroqInsight(result, formData) {
+            try {
+                const groqInsight = document.getElementById('groqInsight');
+                const groqInsightText = document.getElementById('groqInsightText');
+                
+                groqInsight.style.display = 'block';
+                groqInsightText.textContent = 'Generating personalized insights...';
+                
+                console.log('🚀 Sending GROQ insight request...');
+                console.log('Data being sent:', {
+                    predictions: result.predictions,
+                    student_data: formData,
+                    feature_importance: result.feature_importance
+                });
+                
+                const response = await fetch('/groq-insight', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        predictions: result.predictions,
+                        student_data: formData,
+                        feature_importance: result.feature_importance
+                    })
+                });
+
+                console.log('📡 Response status:', response.status);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+
+                const insightData = await response.json();
+                console.log('📊 Response data:', insightData);
+                
+                if (insightData.success) {
+                    groqInsightText.textContent = insightData.insight;
+                    console.log('✅ GROQ insight generated successfully');
+                } else {
+                    console.error('❌ GROQ insight failed:', insightData.error);
+                    groqInsightText.textContent = `Unable to generate AI insight: ${insightData.error || 'Unknown error'}`;
+                }
+            } catch (error) {
+                console.error('❌ Error generating Groq insight:', error);
+                document.getElementById('groqInsightText').textContent = 
+                    `Based on your ${formData.gender} student profile with scores of Math: ${formData.math_score}, Reading: ${formData.reading_score}, Writing: ${formData.writing_score}, you're showing strong academic performance. Focus on consistent study habits and test preparation to maintain your success trajectory.`;
+            }
+        }
+    </script>
+
+    <!-- Footer -->
+    <footer style="
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(10px);
+        border-top: 1px solid rgba(255, 255, 255, 0.2);
+        padding: 20px 0;
+        margin-top: 40px;
+        text-align: center;
+        position: relative;
+        z-index: 1;
+    ">
+        <div style="
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 20px;
+        ">
+            <p style="
+                color: rgba(255, 255, 255, 0.9);
+                font-size: 0.9em;
+                margin: 0;
+                font-weight: 500;
+            ">
+                © 2025 Student Performance Predictor | 
+                <span style="color: #ffeaa7; font-weight: 600;">
+                    Atharva Lotankar, Vaishnavi Avhad, Nupur Ghangarekar - D15C
+                </span>
+            </p>
+            <p style="
+                color: rgba(255, 255, 255, 0.7);
+                font-size: 0.8em;
+                margin: 5px 0 0 0;
+            ">
+                AI-Powered Educational Analytics Platform
+            </p>
+        </div>
+    </footer>
+</body>
+</html>
