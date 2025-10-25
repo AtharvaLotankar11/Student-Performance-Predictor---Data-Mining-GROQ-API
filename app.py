@@ -13,7 +13,6 @@ from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
-from sklearn.svm import SVC
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -120,18 +119,7 @@ def load_and_preprocess_data():
         'f1_score': float(f1_score(y_test, rf_pred))
     }
     
-    # 3. Support Vector Machine (SVM)
-    svm_model = SVC(kernel='rbf', C=1.0, gamma='scale', probability=True, random_state=42)
-    svm_model.fit(X_train_scaled, y_train)
-    svm_pred = svm_model.predict(X_test_scaled)
-    
-    models['svm'] = svm_model
-    model_metrics['svm'] = {
-        'accuracy': float(accuracy_score(y_test, svm_pred)),
-        'precision': float(precision_score(y_test, svm_pred)),
-        'recall': float(recall_score(y_test, svm_pred)),
-        'f1_score': float(f1_score(y_test, svm_pred))
-    }
+    # SVM removed for Vercel compatibility
     
     # Note: Neural Network model removed for Vercel compatibility
     
@@ -139,7 +127,7 @@ def load_and_preprocess_data():
     
     # Clean up temporary variables to free memory
     del X_train, X_test, y_train, y_test, X_train_scaled, X_test_scaled
-    del dt_pred, rf_pred, svm_pred
+    del dt_pred, rf_pred
 
 @app.route('/')
 def index():
@@ -197,15 +185,7 @@ def predict():
             'pass_probability': round(float(rf_probability[1]) * 100, 2)
         }
         
-        # SVM Prediction
-        input_scaled = scaler.transform(input_data)
-        svm_prediction = models['svm'].predict(input_scaled)[0]
-        svm_probability = models['svm'].predict_proba(input_scaled)[0]
-        results['svm'] = {
-            'prediction': 'Pass' if svm_prediction == 1 else 'Fail',
-            'confidence': round(float(max(svm_probability)) * 100, 2),
-            'pass_probability': round(float(svm_probability[1]) * 100, 2)
-        }
+        # SVM removed for Vercel compatibility
         
         # Neural Network removed for Vercel compatibility
         
@@ -214,14 +194,14 @@ def predict():
         sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
         
         # Ensemble prediction (majority voting)
-        predictions = [dt_prediction, rf_prediction, svm_prediction]
-        ensemble_prediction = 1 if sum(predictions) >= 2 else 0
+        predictions = [dt_prediction, rf_prediction]
+        ensemble_prediction = 1 if sum(predictions) >= 1 else 0  # At least 1 model predicts pass
         ensemble_confidence = (sum(predictions) / len(predictions)) * 100
         
         results['ensemble'] = {
             'prediction': 'Pass' if ensemble_prediction == 1 else 'Fail',
             'confidence': round(ensemble_confidence, 2),
-            'agreement': f"{sum(predictions)}/3 models agree"
+            'agreement': f"{sum(predictions)}/2 models agree"
         }
         
         return jsonify({
@@ -275,7 +255,6 @@ def get_metrics_analysis():
         
         Decision Tree: Accuracy {model_metrics['decision_tree']['accuracy']:.4f}, F1-Score {model_metrics['decision_tree']['f1_score']:.4f}
         Random Forest: Accuracy {model_metrics['random_forest']['accuracy']:.4f}, F1-Score {model_metrics['random_forest']['f1_score']:.4f}
-        SVM: Accuracy {model_metrics['svm']['accuracy']:.4f}, F1-Score {model_metrics['svm']['f1_score']:.4f}
 
         Best Performing Model: {best_model_name} with {best_accuracy:.4f} accuracy
 
