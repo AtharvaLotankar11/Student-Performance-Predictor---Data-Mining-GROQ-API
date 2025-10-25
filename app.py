@@ -498,10 +498,18 @@ def test_groq_api():
     except Exception as e:
         return jsonify({'success': False, 'error': str(e)})
 
+# Initialize models when the module is imported (for Vercel)
+try:
+    load_and_preprocess_data()
+    print("Models loaded successfully for serverless deployment")
+except Exception as e:
+    print(f"Warning: Could not load models - {e}")
+
 if __name__ == '__main__':
     try:
         print("Starting Student Performance Predictor...")
-        load_and_preprocess_data()
+        if not models:  # Only load if not already loaded
+            load_and_preprocess_data()
         print("Server ready! Open http://localhost:5000 in your browser")
         app.run(debug=False, port=5000, host='0.0.0.0')
     except FileNotFoundError as e:
