@@ -14,15 +14,8 @@ from sklearn.tree import DecisionTreeClassifier
 from sklearn.metrics import accuracy_score, precision_score, recall_score, f1_score
 from sklearn.ensemble import RandomForestClassifier
 from sklearn.svm import SVC
-import tensorflow as tf
-from tensorflow.keras.models import Sequential
-from tensorflow.keras.layers import Dense, Dropout, BatchNormalization
-from tensorflow.keras.callbacks import EarlyStopping
 import warnings
 warnings.filterwarnings('ignore')
-
-# Optimize TensorFlow memory usage
-tf.config.experimental.enable_memory_growth = True
 
 app = Flask(__name__)
 
@@ -140,39 +133,13 @@ def load_and_preprocess_data():
         'f1_score': float(f1_score(y_test, svm_pred))
     }
     
-    # 4. Neural Network (memory optimized)
-    nn_model = Sequential([
-        Dense(12, activation='relu', input_shape=(X_train_scaled.shape[1],)),
-        Dropout(0.3),
-        Dense(8, activation='relu'),
-        Dropout(0.2),
-        Dense(1, activation='sigmoid')
-    ])
-    
-    nn_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-    
-    # Early stopping
-    early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-    
-    nn_model.fit(X_train_scaled, y_train, epochs=50, batch_size=32, verbose=0, 
-                 validation_split=0.2, callbacks=[early_stopping])
-    
-    nn_pred_prob = nn_model.predict(X_test_scaled, verbose=0)
-    nn_pred = (nn_pred_prob > 0.5).astype(int).flatten()
-    
-    models['neural_network'] = nn_model
-    model_metrics['neural_network'] = {
-        'accuracy': float(accuracy_score(y_test, nn_pred)),
-        'precision': float(precision_score(y_test, nn_pred)),
-        'recall': float(recall_score(y_test, nn_pred)),
-        'f1_score': float(f1_score(y_test, nn_pred))
-    }
+    # Note: Neural Network model removed for Vercel compatibility
     
     print("Models trained successfully!")
     
     # Clean up temporary variables to free memory
     del X_train, X_test, y_train, y_test, X_train_scaled, X_test_scaled
-    del dt_pred, rf_pred, svm_pred, nn_pred, nn_pred_prob
+    del dt_pred, rf_pred, svm_pred
 
 @app.route('/')
 def index():
@@ -240,28 +207,21 @@ def predict():
             'pass_probability': round(float(svm_probability[1]) * 100, 2)
         }
         
-        # Neural Network Prediction
-        nn_probability = models['neural_network'].predict(input_scaled, verbose=0)[0][0]
-        nn_prediction = 1 if nn_probability > 0.5 else 0
-        results['neural_network'] = {
-            'prediction': 'Pass' if nn_prediction == 1 else 'Fail',
-            'confidence': round(float(nn_probability if nn_prediction == 1 else 1 - nn_probability) * 100, 2),
-            'pass_probability': round(float(nn_probability) * 100, 2)
-        }
+        # Neural Network removed for Vercel compatibility
         
         # Feature importance from Decision Tree
         feature_importance = dict(zip(feature_names, models['decision_tree'].feature_importances_))
         sorted_features = sorted(feature_importance.items(), key=lambda x: x[1], reverse=True)
         
         # Ensemble prediction (majority voting)
-        predictions = [dt_prediction, rf_prediction, svm_prediction, nn_prediction]
+        predictions = [dt_prediction, rf_prediction, svm_prediction]
         ensemble_prediction = 1 if sum(predictions) >= 2 else 0
         ensemble_confidence = (sum(predictions) / len(predictions)) * 100
         
         results['ensemble'] = {
             'prediction': 'Pass' if ensemble_prediction == 1 else 'Fail',
             'confidence': round(ensemble_confidence, 2),
-            'agreement': f"{sum(predictions)}/4 models agree"
+            'agreement': f"{sum(predictions)}/3 models agree"
         }
         
         return jsonify({
@@ -316,7 +276,6 @@ def get_metrics_analysis():
         Decision Tree: Accuracy {model_metrics['decision_tree']['accuracy']:.4f}, F1-Score {model_metrics['decision_tree']['f1_score']:.4f}
         Random Forest: Accuracy {model_metrics['random_forest']['accuracy']:.4f}, F1-Score {model_metrics['random_forest']['f1_score']:.4f}
         SVM: Accuracy {model_metrics['svm']['accuracy']:.4f}, F1-Score {model_metrics['svm']['f1_score']:.4f}
-        Neural Network: Accuracy {model_metrics['neural_network']['accuracy']:.4f}, F1-Score {model_metrics['neural_network']['f1_score']:.4f}
 
         Best Performing Model: {best_model_name} with {best_accuracy:.4f} accuracy
 
