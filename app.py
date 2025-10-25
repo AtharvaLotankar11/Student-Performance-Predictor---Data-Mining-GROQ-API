@@ -17,18 +17,9 @@ from sklearn.svm import SVC
 import warnings
 warnings.filterwarnings('ignore')
 
-# Try to import TensorFlow, fallback to simple neural network if not available
-try:
-    import tensorflow as tf
-    from tensorflow.keras.models import Sequential
-    from tensorflow.keras.layers import Dense, Dropout
-    from tensorflow.keras.callbacks import EarlyStopping
-    TF_AVAILABLE = True
-    # Optimize TensorFlow memory usage
-    tf.config.experimental.enable_memory_growth = True
-except ImportError:
-    TF_AVAILABLE = False
-    print("TensorFlow not available, using simple neural network implementation")
+# Use lightweight scikit-learn only for Vercel compatibility
+from sklearn.neural_network import MLPClassifier
+TF_AVAILABLE = False  # Force use of lightweight implementation
 
 app = Flask(__name__)
 
@@ -120,8 +111,8 @@ def load_and_preprocess_data():
         'f1_score': float(f1_score(y_test, dt_pred))
     }
     
-    # 2. Random Forest Classifier (optimized for memory)
-    rf_model = RandomForestClassifier(n_estimators=50, max_depth=8, min_samples_split=10, random_state=42, n_jobs=2)
+    # 2. Random Forest Classifier (lightweight for Vercel)
+    rf_model = RandomForestClassifier(n_estimators=20, max_depth=6, min_samples_split=20, random_state=42, n_jobs=1)
     rf_model.fit(X_train, y_train)
     rf_pred = rf_model.predict(X_test)
     
@@ -133,8 +124,8 @@ def load_and_preprocess_data():
         'f1_score': float(f1_score(y_test, rf_pred))
     }
     
-    # 3. Support Vector Machine (SVM)
-    svm_model = SVC(kernel='rbf', C=1.0, gamma='scale', probability=True, random_state=42)
+    # 3. Support Vector Machine (SVM) - lightweight
+    svm_model = SVC(kernel='linear', C=0.5, probability=True, random_state=42)
     svm_model.fit(X_train_scaled, y_train)
     svm_pred = svm_model.predict(X_test_scaled)
     
@@ -146,49 +137,18 @@ def load_and_preprocess_data():
         'f1_score': float(f1_score(y_test, svm_pred))
     }
     
-    # 4. Neural Network (TensorFlow or simple implementation)
-    if TF_AVAILABLE:
-        # TensorFlow Neural Network
-        nn_model = Sequential([
-            Dense(12, activation='relu', input_shape=(X_train_scaled.shape[1],)),
-            Dropout(0.3),
-            Dense(8, activation='relu'),
-            Dropout(0.2),
-            Dense(1, activation='sigmoid')
-        ])
-        
-        nn_model.compile(optimizer='adam', loss='binary_crossentropy', metrics=['accuracy'])
-        
-        # Early stopping
-        early_stopping = EarlyStopping(monitor='val_loss', patience=5, restore_best_weights=True)
-        
-        nn_model.fit(X_train_scaled, y_train, epochs=30, batch_size=32, verbose=0, 
-                     validation_split=0.2, callbacks=[early_stopping])
-        
-        nn_pred_prob = nn_model.predict(X_test_scaled, verbose=0)
-        nn_pred = (nn_pred_prob > 0.5).astype(int).flatten()
-        
-        models['neural_network'] = nn_model
-        model_metrics['neural_network'] = {
-            'accuracy': float(accuracy_score(y_test, nn_pred)),
-            'precision': float(precision_score(y_test, nn_pred)),
-            'recall': float(recall_score(y_test, nn_pred)),
-            'f1_score': float(f1_score(y_test, nn_pred))
-        }
-    else:
-        # Simple Neural Network using scikit-learn MLPClassifier as fallback
-        from sklearn.neural_network import MLPClassifier
-        nn_model = MLPClassifier(hidden_layer_sizes=(12, 8), max_iter=100, random_state=42)
-        nn_model.fit(X_train_scaled, y_train)
-        nn_pred = nn_model.predict(X_test_scaled)
-        
-        models['neural_network'] = nn_model
-        model_metrics['neural_network'] = {
-            'accuracy': float(accuracy_score(y_test, nn_pred)),
-            'precision': float(precision_score(y_test, nn_pred)),
-            'recall': float(recall_score(y_test, nn_pred)),
-            'f1_score': float(f1_score(y_test, nn_pred))
-        }
+    # 4. Neural Network (Lightweight scikit-learn implementation)
+    nn_model = MLPClassifier(hidden_layer_sizes=(8, 4), max_iter=50, random_state=42, early_stopping=True)
+    nn_model.fit(X_train_scaled, y_train)
+    nn_pred = nn_model.predict(X_test_scaled)
+    
+    models['neural_network'] = nn_model
+    model_metrics['neural_network'] = {
+        'accuracy': float(accuracy_score(y_test, nn_pred)),
+        'precision': float(precision_score(y_test, nn_pred)),
+        'recall': float(recall_score(y_test, nn_pred)),
+        'f1_score': float(f1_score(y_test, nn_pred))
+    }
     
     print("Models trained successfully!")
     
@@ -262,25 +222,14 @@ def predict():
             'pass_probability': round(float(svm_probability[1]) * 100, 2)
         }
         
-        # Neural Network Prediction
-        if TF_AVAILABLE:
-            # TensorFlow Neural Network
-            nn_probability = models['neural_network'].predict(input_scaled, verbose=0)[0][0]
-            nn_prediction = 1 if nn_probability > 0.5 else 0
-            results['neural_network'] = {
-                'prediction': 'Pass' if nn_prediction == 1 else 'Fail',
-                'confidence': round(float(nn_probability if nn_prediction == 1 else 1 - nn_probability) * 100, 2),
-                'pass_probability': round(float(nn_probability) * 100, 2)
-            }
-        else:
-            # Simple Neural Network
-            nn_prediction = models['neural_network'].predict(input_scaled)[0]
-            nn_probability = models['neural_network'].predict_proba(input_scaled)[0]
-            results['neural_network'] = {
-                'prediction': 'Pass' if nn_prediction == 1 else 'Fail',
-                'confidence': round(float(max(nn_probability)) * 100, 2),
-                'pass_probability': round(float(nn_probability[1]) * 100, 2)
-            }
+        # Neural Network Prediction (scikit-learn)
+        nn_prediction = models['neural_network'].predict(input_scaled)[0]
+        nn_probability = models['neural_network'].predict_proba(input_scaled)[0]
+        results['neural_network'] = {
+            'prediction': 'Pass' if nn_prediction == 1 else 'Fail',
+            'confidence': round(float(max(nn_probability)) * 100, 2),
+            'pass_probability': round(float(nn_probability[1]) * 100, 2)
+        }
         
         # Feature importance from Decision Tree
         feature_importance = dict(zip(feature_names, models['decision_tree'].feature_importances_))
