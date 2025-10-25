@@ -472,7 +472,17 @@ def health_check():
     return jsonify({
         'status': 'healthy',
         'models_loaded': len(models),
-        'models': list(models.keys())
+        'models': list(models.keys()),
+        'dataset_info': dataset_info
+    })
+
+@app.route('/api/health')
+def api_health_check():
+    """API health check endpoint for Vercel"""
+    return jsonify({
+        'status': 'ok',
+        'service': 'Student Performance Predictor',
+        'models_ready': len(models) > 0
     })
 
 @app.route('/test-groq')
