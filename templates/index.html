@@ -674,7 +674,7 @@
                         </div>
                     </div>
 
-                    <div class="prediction-box">
+                    <div class="prediction-box" style="display: none;">
                         <h3>⚡ SVM</h3>
                         <div class="prediction-result" id="svm-result">-</div>
                         <div class="confidence" id="svm-confidence">-</div>
@@ -683,7 +683,7 @@
                         </div>
                     </div>
 
-                    <div class="prediction-box">
+                    <div class="prediction-box" style="display: none;">
                         <h3>🧠 Neural Network</h3>
                         <div class="prediction-result" id="nn-result">-</div>
                         <div class="confidence" id="nn-confidence">-</div>
@@ -774,9 +774,7 @@
                 
                 const modelNames = {
                     'decision_tree': 'Decision Tree',
-                    'random_forest': 'Random Forest',
-                    'svm': 'SVM',
-                    'neural_network': 'Neural Network'
+                    'random_forest': 'Random Forest'
                 };
                 
                 for (const [modelKey, modelMetrics] of Object.entries(metrics)) {
@@ -937,12 +935,6 @@
                     
                     // Update Random Forest results
                     updatePrediction('rf', result.predictions.random_forest);
-                    
-                    // Update SVM results
-                    updatePrediction('svm', result.predictions.svm);
-                    
-                    // Update Neural Network results
-                    updatePrediction('nn', result.predictions.neural_network);
 
                     // Update Ensemble results
                     const ensembleResult = document.getElementById('ensemble-result');
