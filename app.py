@@ -4,6 +4,10 @@ import numpy as np
 import pandas as pd
 import requests
 from flask import Flask, render_template, request, jsonify
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
 from sklearn.model_selection import train_test_split
 from sklearn.preprocessing import LabelEncoder, StandardScaler
 from sklearn.tree import DecisionTreeClassifier
@@ -21,6 +25,10 @@ warnings.filterwarnings('ignore')
 tf.config.experimental.enable_memory_growth = True
 
 app = Flask(__name__)
+
+# Flask Configuration
+app.config['SECRET_KEY'] = os.getenv('SECRET_KEY', 'fallback-secret-key-for-development')
+app.config['DEBUG'] = os.getenv('FLASK_DEBUG', 'False').lower() == 'true'
 
 # Groq API Configuration
 GROQ_API_KEY = os.getenv("GROQ_API_KEY")
