@@ -173,6 +173,11 @@ def index():
 def predict():
     """Make predictions using all trained models"""
     try:
+        # Lazy load models if not already loaded
+        if not models:
+            print("Loading models on first request...")
+            load_and_preprocess_data()
+        
         data = request.json
         
         # Prepare input data
@@ -525,10 +530,15 @@ def test_groq_api():
 
 # Initialize models when the module is imported (for Vercel)
 try:
-    load_and_preprocess_data()
-    print("Models loaded successfully for serverless deployment")
+    # Only load models if not already loaded and if dataset exists
+    if not models and os.path.exists('StudentsPerformance.csv'):
+        load_and_preprocess_data()
+        print("Models loaded successfully for serverless deployment")
+    elif not os.path.exists('StudentsPerformance.csv'):
+        print("Warning: Dataset file not found - models will not be available")
 except Exception as e:
     print(f"Warning: Could not load models - {e}")
+    # Continue without models for basic health checks
 
 if __name__ == '__main__':
     try:
